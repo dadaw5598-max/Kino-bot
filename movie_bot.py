@@ -51,15 +51,15 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         code = data.split("_")[1]
         movie = MOVIES.get(code)
         if movie:
-            loading = await query.message.reply_text("⏳ *Yuklanmoqda...*", parse_mode="Markdown")
+            await query.message.edit_text("⏳ *Yuklanmoqda...*", parse_mode="Markdown")
             await context.bot.send_video(
                 chat_id=query.message.chat_id,
                 video=movie["file_id"],
                 protect_content=True,
             )
-            await loading.edit_text("🎉 *Maroqli tomosha!*", parse_mode="Markdown")
+            await query.message.edit_text("🎉 *Maroqli tomosha!*", parse_mode="Markdown")
             await asyncio.sleep(10)
-            await loading.delete()
+            await query.message.delete()
 
     elif data.startswith("rate_"):
         await query.message.reply_text("⭐ Baholash funksiyasi tez orada!")
