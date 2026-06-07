@@ -9,10 +9,6 @@ MOVIES = {
     "001": {
         "title": "Birinchi kino",
         "file_id": "BAACAgEAAxkBAAMGaiS-Pls08mdOirvxxVmQeBC5WJEAAwQAAqwNEEdb4RiDHppNJTsE",
-        "country": "O'zbekiston",
-        "language": "O'zbek",
-        "year": "2024",
-        "genre": "Drama",
     },
 }
 
@@ -34,20 +30,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode="Markdown"
     )
 
-async def show_movie(update, context, code, movie):
-    caption = (
-        f"🎬 *{movie['title']}*\n\n"
-        f"🌍 Davlati: {movie['country']}\n"
-        f"🗣 Tarjima: {movie['language']}\n"
-        f"📅 Yili: {movie['year']}\n"
-        f"🎭 Janri: {movie['genre']}"
-    )
-    keyboard = movie_keyboard(code)
-    if update.message:
-        await update.message.reply_text(caption, parse_mode="Markdown", reply_markup=keyboard)
-    else:
-        await update.callback_query.message.reply_text(caption, parse_mode="Markdown", reply_markup=keyboard)
-
 async def handle_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
     code = update.message.text.strip().zfill(3)
     movie = MOVIES.get(code)
@@ -58,7 +40,12 @@ async def handle_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
             parse_mode="Markdown"
         )
         return
-    await show_movie(update, context, code, movie)
+    keyboard = movie_keyboard(code)
+    await update.message.reply_text(
+        f"🎬 *{movie['title']}*",
+        parse_mode="Markdown",
+        reply_markup=keyboard
+    )
 
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
