@@ -40,11 +40,7 @@ async def handle_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
             parse_mode="Markdown"
         )
         return
-    keyboard = movie_keyboard(code)
-    await update.message.reply_text(
-        "🎬",
-        reply_markup=keyboard
-    )
+    await update.message.reply_text("🎬", reply_markup=movie_keyboard(code))
 
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -59,7 +55,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await context.bot.send_video(
                 chat_id=query.message.chat_id,
                 video=movie["file_id"],
-                caption=f"🎬 {movie['title']}",
                 protect_content=True,
             )
             await loading.edit_text("🎉 *Maroqli tomosha!*", parse_mode="Markdown")
