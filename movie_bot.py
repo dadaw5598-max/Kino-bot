@@ -1,4 +1,5 @@
 import logging
+import asyncio
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
 
@@ -8,7 +9,6 @@ MOVIES = {
     "001": {
         "title": "Birinchi kino",
         "file_id": "BAACAgEAAxkBAAMGaiS-Pls08mdOirvxxVmQeBC5WJEAAwQAAqwNEEdb4RiDHppNJTsE",
-        "photo": None,
         "country": "O'zbekiston",
         "language": "O'zbek",
         "year": "2024",
@@ -21,22 +21,18 @@ logging.basicConfig(level=logging.INFO)
 def movie_keyboard(code):
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("📹 Tomosha qilish", callback_data=f"watch_{code}")],
-        [InlineKeyboardButton("📤 Ulashish", switch_inline_query=code),
-         InlineKeyboardButton("⭐ Baholash", callback_data=f"rate_{code}")],
-        [InlineKeyboardButton("🕐 Ko'rmoqchiman", callback_data=f"later_{code}"),
-         InlineKeyboardButton("🏠 Asosiy Menyu", callback_data="menu")],
+        [InlineKeyboardButton("⭐ Baholash", callback_data=f"rate_{code}"),
+         InlineKeyboardButton("🕐 Ko'rmoqchiman", callback_data=f"later_{code}")],
+        [InlineKeyboardButton("🏠 Asosiy Menyu", callback_data="menu")],
     ])
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🎬 Kinolar ro'yxati", callback_data="list")],
-        [InlineKeyboardButton("🔍 Qidirish", switch_inline_query="")],
-    ])
-    await update.message.reply_text(
+    msg = update.message or update.callback_query.message
+    await msg.reply_text(
         "🎬 *Kino Botga xush kelibsiz!*\n\n"
-        "Kino kodini yozing yoki quyidagi tugmalardan foydalaning:",
-        parse_mode="Markdown",
-        reply_markup=keyboard
+        "🎥 Kerakli kinongizning kodini yuboring\n"
+        "📋 Barcha kinolar ro'yxati uchun /list yozing",
+        parse_mode="Markdown"
     )
 
 async def show_movie(update, context, code, movie):
@@ -57,7 +53,12 @@ async def handle_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
     code = update.message.text.strip().zfill(3)
     movie = MOVIES.get(code)
     if not movie:
-        await update.message.reply_text("❌ Kino topilmadi!\n\n📋 Ro'yxat uchun /list yozing.")
+        await update.message.reply_text(
+            "❌ *Kino topilmadi!*\n\n"
+            "🔢 Iltimos, to'g'ri kodni kiriting\n"
+            "📋 Ro'yxat uchun /list yozing",
+            parse_mode="Markdown"
+        )
         return
     await show_movie(update, context, code, movie)
 
@@ -76,18 +77,23 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         code = data.split("_")[1]
         movie = MOVIES.get(code)
         if movie:
-            await query.message.reply_text("⏳ Yuklanmoqda...")
+            loading = await query.message.reply_text("⏳ *Yuklanmoqda...*", parse_mode="Markdown")
             await context.bot.send_video(
                 chat_id=query.message.chat_id,
                 video=movie["file_id"],
                 caption=f"🎬 {movie['title']}",
+                protect_content=True,
             )
+            await loading.edit_text("🎉 *Maroqli tomosha!*", parse_mode="Markdown")
+            await asyncio.sleep(10)
+            await loading.delete()
+
     elif data.startswith("rate_"):
         await query.message.reply_text("⭐ Baholash funksiyasi tez orada!")
     elif data.startswith("later_"):
         await query.message.reply_text("🕐 Keyinroq ko'rish ro'yxatiga qo'shildi!")
     elif data == "menu":
-        await start(query, context)
+        await start(update, context)
     elif data == "list":
         text = "🎬 *Kinolar ro'yxati:*\n\n"
         for code, m in MOVIES.items():
