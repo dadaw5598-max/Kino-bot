@@ -30,8 +30,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = update.message or update.callback_query.message
     await msg.reply_text(
         "🎬 *Kino Botga xush kelibsiz!*\n\n"
-        "🎥 Kerakli kinongizning kodini yuboring\n"
-        "📋 Barcha kinolar ro'yxati uchun /list yozing",
+        "🎥 Kerakli kinongizning kodini yuboring",
         parse_mode="Markdown"
     )
 
@@ -55,18 +54,11 @@ async def handle_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not movie:
         await update.message.reply_text(
             "❌ *Kino topilmadi!*\n\n"
-            "🔢 Iltimos, to'g'ri kodni kiriting\n"
-            "📋 Ro'yxat uchun /list yozing",
+            "🔢 Iltimos, to'g'ri kodni kiriting",
             parse_mode="Markdown"
         )
         return
     await show_movie(update, context, code, movie)
-
-async def list_movies(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = "🎬 *Kinolar ro'yxati:*\n\n"
-    for code, m in MOVIES.items():
-        text += f"🎥 *{m['title']}* — Kod: `{code}`\n"
-    await update.message.reply_text(text, parse_mode="Markdown")
 
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -94,11 +86,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.message.reply_text("🕐 Keyinroq ko'rish ro'yxatiga qo'shildi!")
     elif data == "menu":
         await start(update, context)
-    elif data == "list":
-        text = "🎬 *Kinolar ro'yxati:*\n\n"
-        for code, m in MOVIES.items():
-            text += f"🎥 *{m['title']}* — Kod: `{code}`\n"
-        await query.message.reply_text(text, parse_mode="Markdown")
 
 async def get_file_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message.video:
@@ -107,7 +94,6 @@ async def get_file_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 app = Application.builder().token(BOT_TOKEN).build()
 app.add_handler(CommandHandler("start", start))
-app.add_handler(CommandHandler("list", list_movies))
 app.add_handler(CallbackQueryHandler(button_handler))
 app.add_handler(MessageHandler(filters.VIDEO, get_file_id))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_code))
