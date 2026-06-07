@@ -42,8 +42,7 @@ async def handle_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     keyboard = movie_keyboard(code)
     await update.message.reply_text(
-        f"🎬 *{movie['title']}*",
-        parse_mode="Markdown",
+        "🎬",
         reply_markup=keyboard
     )
 
